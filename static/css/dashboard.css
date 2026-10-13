@@ -218,6 +218,56 @@ body {
   font-size: 12.5px;
   font-weight: 600;
   color: #334155;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Red-marked required farmer parameter items */
+.form-group label.label-marked-red {
+  color: #dc2626 !important;
+  font-weight: 700 !important;
+}
+
+.req-red-star {
+  color: #ef4444;
+  font-size: 15px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.req-red-pill {
+  font-size: 10px;
+  font-weight: 700;
+  color: #b91c1c;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  padding: 1px 6px;
+  border-radius: 4px;
+  margin-left: auto;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+.form-control.input-marked-red {
+  border-color: #fca5a5;
+  background-color: #ffffff;
+}
+
+.form-control.input-marked-red:focus {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+}
+
+.badge-auto-month {
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+  font-size: 10.5px;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-weight: 700;
+  margin-left: auto;
 }
 
 .form-control {

@@ -71,14 +71,26 @@
                 </div>
 
                 <div class="form-grid">
+                    <!-- 1. Farmer / Landowner Name (Marked in Red) -->
                     <div class="form-group">
-                        <label for="inputFarmerName">Farmer / Landowner Name</label>
-                        <input type="text" id="inputFarmerName" class="form-control" placeholder="e.g. Ramesh Kumar" value="Farmer">
+                        <label for="inputFarmerName" class="label-marked-red">
+                            <span class="req-red-star">*</span>
+                            <span>Farmer / Landowner Name</span>
+                            <span class="req-red-pill">Required</span>
+                        </label>
+                        <input type="text" id="inputFarmerName" class="form-control input-marked-red" placeholder="e.g. Ramesh Kumar" value="Farmer">
                     </div>
+
+                    <!-- 2. Contact / Mobile Number (Marked in Red) -->
                     <div class="form-group">
-                        <label for="inputFarmerPhone">Contact / Mobile Number</label>
-                        <input type="tel" id="inputFarmerPhone" class="form-control" placeholder="e.g. 9876543210" value="9876543210">
+                        <label for="inputFarmerPhone" class="label-marked-red">
+                            <span class="req-red-star">*</span>
+                            <span>Contact / Mobile Number</span>
+                            <span class="req-red-pill">Required</span>
+                        </label>
+                        <input type="tel" id="inputFarmerPhone" class="form-control input-marked-red" placeholder="e.g. 9876543210" value="9876543210">
                     </div>
+
                     <div class="form-group">
                         <label for="selectState">State</label>
                         <select id="selectState" class="form-control">
@@ -90,52 +102,78 @@
                             <option value="Kerala">Kerala</option>
                         </select>
                     </div>
+
                     <div class="form-group">
                         <label for="selectDistrict">District (Select to Set Coordinates)</label>
                         <select id="selectDistrict" class="form-control">
                             <option value="">-- Choose Karnataka District --</option>
                         </select>
                     </div>
+
                     <div class="form-group">
                         <label for="inputLat">Latitude (Live GPS / Editable)</label>
                         <input type="number" step="any" id="inputLat" class="form-control" placeholder="e.g. 15.4589" value="15.4589">
                     </div>
+
                     <div class="form-group">
                         <label for="inputLon">Longitude (Live GPS / Editable)</label>
                         <input type="number" step="any" id="inputLon" class="form-control" placeholder="e.g. 75.0078" value="75.0078">
                     </div>
+
+                    <!-- 3. Cultivable Area (Acres) (Marked in Red) -->
                     <div class="form-group">
-                        <label for="inputAcres">Cultivable Area (Acres)</label>
-                        <input type="number" step="0.1" id="inputAcres" class="form-control" value="2.0" min="0.1">
+                        <label for="inputAcres" class="label-marked-red">
+                            <span class="req-red-star">*</span>
+                            <span>Cultivable Area (Acres)</span>
+                            <span class="req-red-pill">Required</span>
+                        </label>
+                        <input type="number" step="0.1" id="inputAcres" class="form-control input-marked-red" value="2.0" min="0.1">
                     </div>
+
+                    <!-- 4. Water Source & Irrigation (Marked in Red) -->
                     <div class="form-group">
-                        <label for="inputIrrigation">Water Source & Irrigation</label>
-                        <select id="inputIrrigation" class="form-control">
+                        <label for="inputIrrigation" class="label-marked-red">
+                            <span class="req-red-star">*</span>
+                            <span>Water Source & Irrigation</span>
+                            <span class="req-red-pill">Required</span>
+                        </label>
+                        <select id="inputIrrigation" class="form-control input-marked-red">
                             <option value="Borewell / Irrigated" selected>Borewell / Assured Irrigation</option>
                             <option value="Canal / Tank">Canal / Tank Irrigated</option>
                             <option value="Rainfed">Rainfed (Dryland / No Borewell)</option>
                         </select>
                     </div>
+
+                    <!-- Planting / Sowing Month (Auto-Filled on its own) -->
                     <div class="form-group">
-                        <label for="selectPlantingMonth">Planting / Sowing Month</label>
-                        <select id="selectPlantingMonth" class="form-control">
-                            <option value="June" selected>June (Kharif Early)</option>
+                        <label for="selectPlantingMonth">
+                            <span>Planting / Sowing Month</span>
+                            <span class="badge-auto-month" id="monthAutoBadge">⚡ Auto-Filled Current Month</span>
+                        </label>
+                        <select id="selectPlantingMonth" class="form-control" style="border-color: #86efac; background-color: #f0fdf4;">
+                            <option value="January">January (Winter / Summer)</option>
+                            <option value="February">February (Summer Early)</option>
+                            <option value="March">March (Summer Main)</option>
+                            <option value="April">April (Pre-Monsoon)</option>
+                            <option value="May">May (Early Sowing)</option>
+                            <option value="June">June (Kharif Early)</option>
                             <option value="July">July (Kharif Main)</option>
                             <option value="August">August (Kharif Late)</option>
                             <option value="September">September (Rabi Early)</option>
                             <option value="October">October (Rabi Main)</option>
                             <option value="November">November (Rabi)</option>
                             <option value="December">December (Winter)</option>
-                            <option value="January">January (Zaid / Summer)</option>
-                            <option value="February">February (Summer)</option>
-                            <option value="March">March (Summer)</option>
-                            <option value="April">April (Pre-Monsoon)</option>
-                            <option value="May">May (Early Sowing)</option>
                         </select>
                     </div>
+
+                    <!-- 5. Primary Farming Goal (Marked in Red) -->
                     <div class="form-group">
-                        <label for="selectFarmingGoal">Primary Farming Goal</label>
-                        <select id="selectFarmingGoal" class="form-control">
+                        <label for="selectFarmingGoal" class="label-marked-red">
+                            <span class="req-red-star">*</span>
+                            <span>Primary Farming Goal</span>
+                            <span class="req-red-pill">Required</span>
+                        </label>
+                        <select id="selectFarmingGoal" class="form-control input-marked-red">
                             <option value="Maximize Net Profit" selected>💰 Maximize Net Profit</option>
                             <option value="Drought Resistance">🛡️ Drought Resistance & Low Water Risk</option>
                             <option value="Low Investment Cost">🌱 Low Investment / Minimal Input Cost</option>

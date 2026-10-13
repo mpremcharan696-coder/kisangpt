@@ -55,7 +55,7 @@ document.addEventListener("DOMContentLoaded", () => {
         longitude: 75.0078,
         acres: 2.0,
         irrigation: "Borewell / Irrigated",
-        plantingMonth: "June",
+        plantingMonth: new Date().toLocaleString("en-US", { month: "long" }),
         farmingGoal: "Maximize Net Profit",
         soilType: null,
         weatherSummary: null,
@@ -113,6 +113,16 @@ document.addEventListener("DOMContentLoaded", () => {
     const inputIrrigation = document.getElementById("inputIrrigation");
     const selectPlantingMonth = document.getElementById("selectPlantingMonth");
     const selectFarmingGoal = document.getElementById("selectFarmingGoal");
+
+    // Automatically fill current calendar month on its own
+    const currentMonthName = new Date().toLocaleString("en-US", { month: "long" });
+    if (selectPlantingMonth) {
+        selectPlantingMonth.value = currentMonthName;
+        const monthBadge = document.getElementById("monthAutoBadge");
+        if (monthBadge) {
+            monthBadge.textContent = `⚡ Auto-Filled: ${currentMonthName}`;
+        }
+    }
 
     // Action Buttons
     const btnDetectLocation = document.getElementById("btnDetectLocation");
