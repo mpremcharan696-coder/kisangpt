@@ -852,7 +852,8 @@ def api_chat_message():
         "selected_voice": speaker,
         "intent": reply_data.get("intent"),
         "extracted_memory": reply_data.get("extracted_memory"),
-        "total_memory": reply_data.get("total_memory")
+        "total_memory": reply_data.get("total_memory"),
+        "visual_aid": reply_data.get("visual_aid")
     }), 200
 
 

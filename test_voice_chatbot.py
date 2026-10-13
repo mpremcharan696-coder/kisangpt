@@ -161,6 +161,15 @@ class TestVoiceChatbot(unittest.TestCase):
             self.assertFalse(val.startswith("{"))
             self.assertFalse(val.endswith("}"))
 
+    def test_free_agricultural_visual_generation(self):
+        """Verifies zero-cost high-definition agricultural pictorial generation."""
+        import hf_image_service as hf_svc
+        res = hf_svc.generate_agricultural_visual("finger millet leaf blast symptoms")
+        self.assertEqual(res["status"], "success")
+        self.assertIn(res["provider"], ["free_visual_engine", "huggingface", "direct_url"])
+        self.assertTrue(bool(res.get("image_url")))
+
 
 if __name__ == "__main__":
     unittest.main()
+

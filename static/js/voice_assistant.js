@@ -256,10 +256,33 @@ document.addEventListener("DOMContentLoaded", () => {
                             <div style="font-size: 14px; line-height: 1.6; color: #1e293b;">
                                 ${englishReply}
                             </div>
-                        </div>
                     </div>
                 </div>
             `;
+
+            // If pictorial visual aid was generated
+            if (data.visual_aid && (data.visual_aid.image_url || data.visual_aid.image_base64)) {
+                const imgSource = data.visual_aid.image_base64 || data.visual_aid.image_url;
+                const visualCard = document.createElement("div");
+                visualCard.style.cssText = "margin-top: 12px; border-radius: 10px; overflow: hidden; border: 1px solid #cbd5e1; background: #ffffff; box-shadow: 0 2px 8px rgba(0,0,0,0.06);";
+                visualCard.innerHTML = `
+                    <img src="${imgSource}" 
+                         alt="Agricultural Visual Guide" 
+                         style="width: 100%; max-height: 280px; object-fit: cover; display: block;" 
+                         loading="lazy" />
+                    <div style="padding: 10px 14px; background: #f8fafc; border-top: 1px solid #e2e8f0;">
+                        <div style="font-weight: 700; color: #15803d; font-size: 13px; font-family: 'Noto Sans Kannada', sans-serif;">
+                            🖼️ ${data.visual_aid.caption_kannada || "ಚಿತ್ರ: ಕೃಷಿ ಮಾಹಿತಿ ವಿವರಣೆ"}
+                        </div>
+                        <div style="color: #64748b; font-size: 11.5px; margin-top: 3px;">
+                            ${data.visual_aid.caption_english || "Visual: Agricultural reference guide"}
+                        </div>
+                    </div>
+                `;
+                const container = msgDiv.querySelector(".bot-bilingual-container");
+                if (container) container.appendChild(visualCard);
+            }
+
 
             // On-demand Voice Playback handlers
             const btnPlayKn = msgDiv.querySelector(".btn-play-kn");
@@ -386,7 +409,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 appendMessage("bot", {
                     kannada_reply: data.kannada_reply,
                     english_reply: data.english_reply,
-                    intent: data.intent
+                    intent: data.intent,
+                    visual_aid: data.visual_aid
                 });
 
                 if (data.total_memory) {

@@ -147,11 +147,14 @@ def _clean_json_response(raw_text: str) -> Dict[str, Any]:
     if not clean_kn:
         clean_kn = "ನಾನು ನಿಮ್ಮ ಕೃಷಿ ಮತ್ತು ಬೆಳೆಗಳ ಬಗ್ಗೆ ಮಾರ್ಗದರ್ಶನ ನೀಡಲು ಇಲ್ಲಿದ್ದೇನೆ."
 
+    visual_aid = parsed.get("visual_aid") if isinstance(parsed.get("visual_aid"), dict) else {}
+
     return {
         "english_reply": clean_en,
         "kannada_reply": clean_kn,
         "intent": parsed.get("intent", "general"),
-        "extracted_memory": parsed.get("extracted_memory") if isinstance(parsed.get("extracted_memory"), dict) else {}
+        "extracted_memory": parsed.get("extracted_memory") if isinstance(parsed.get("extracted_memory"), dict) else {},
+        "visual_aid": visual_aid
     }
 
 
@@ -162,6 +165,15 @@ You have two primary duties:
 2. ALWAYS generate TWO distinct replies for every farmer turn:
    - One reply in ENGLISH ('english_reply') containing only clean English text (plain conversational sentences, NO JSON).
    - One reply in KANNADA ('kannada_reply') containing only clean Kannada text in Kannada script (ಕನ್ನಡ) (NO JSON).
+
+3. PICTORIAL / VISUAL AID DETERMINATION:
+   Determine whether a picture is necessary to help the farmer easily understand:
+   - Set "needs_visual": true ONLY when explaining:
+     * Crop pest, insect, or leaf disease symptoms (e.g. blast, blight, caterpillar damage).
+     * Sowing line spacing or planting distance (e.g. row-to-row, plant-to-plant).
+     * Method of fertilizer application or spraying technique.
+     * Crop maturity and harvesting signs.
+   - Set "needs_visual": false for greetings, language switches, general budgets, or simple conversational confirmations.
 
 Your response must strictly be valid JSON in this exact structure:
 {
@@ -175,6 +187,12 @@ Your response must strictly be valid JSON in this exact structure:
     "acres": null or acres mentioned,
     "district": null or district mentioned,
     "irrigation": null or irrigation mentioned
+  },
+  "visual_aid": {
+    "needs_visual": true or false,
+    "image_prompt": "Clear photorealistic photo prompt (e.g. 'Close-up of Ragi leaf blast spindle brown spots on green foliage, Indian farm context')",
+    "caption_kannada": "ಚಿತ್ರ: ರಾಗಿ ಬೆಳೆಯ ಎಲೆಗಳಲ್ಲಿ ಬೆಂಕಿ ರೋಗದ ಲಕ್ಷಣಗಳು",
+    "caption_english": "Visual: Blast disease symptoms on finger millet leaves"
   }
 }
 
@@ -332,6 +350,24 @@ def generate_bilingual_reply(
             elif key != "preferred_language":
                 cdb.save_farmer_memory(session_id, key, val)
 
+    # Check if a visual aid is required and generate it
+    visual_aid_data = None
+    raw_visual = parsed.get("visual_aid")
+    if isinstance(raw_visual, dict) and raw_visual.get("needs_visual") and raw_visual.get("image_prompt"):
+        try:
+            import hf_image_service as hf_svc
+            img_res = hf_svc.generate_agricultural_visual(raw_visual["image_prompt"])
+            if img_res.get("status") == "success":
+                visual_aid_data = {
+                    "image_url": img_res.get("image_url"),
+                    "image_base64": img_res.get("image_base64"),
+                    "caption_kannada": raw_visual.get("caption_kannada", "ಚಿತ್ರ: ಕೃಷಿ ಮಾಹಿತಿ"),
+                    "caption_english": raw_visual.get("caption_english", "Visual: Agricultural guidance"),
+                    "provider": img_res.get("provider")
+                }
+        except Exception as img_err:
+            print(f"[Visual Aid Generation Error] {img_err}")
+
     # Persist the bot's turn with both replies stored in their respective columns
     cdb.save_message_turn(
         session_id=session_id,
@@ -349,5 +385,6 @@ def generate_bilingual_reply(
         "intent": intent,
         "active_speaking_language": active_speaking_language,
         "extracted_memory": extracted_memory,
-        "total_memory": cdb.get_all_farmer_memory(session_id)
+        "total_memory": cdb.get_all_farmer_memory(session_id),
+        "visual_aid": visual_aid_data
     }
