@@ -193,6 +193,117 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    // --- Live Location Synchronization Service ---
+    async function syncLiveLocation(lat, lon, isAutomatic = false) {
+        if (!isAutomatic) {
+            showAlert("🛰️ Querying live GPS: Fetching Earth Engine soil, Open-Meteo climate & AI crops...", "info");
+        }
+        if (btnDetectLocation) {
+            btnDetectLocation.disabled = true;
+            btnDetectLocation.textContent = "⏳ Fetching Live Location...";
+        }
+
+        inputLat.value = lat.toFixed(4);
+        inputLon.value = lon.toFixed(4);
+        appState.latitude = lat;
+        appState.longitude = lon;
+
+        const sessionId = localStorage.getItem("krishimitra_chat_session_id") || "farmer_session_default";
+        const acres = parseFloat(inputAcres.value) || 2.0;
+        const irrigation = inputIrrigation ? inputIrrigation.value : "Borewell / Irrigated";
+        const plantingMonth = selectPlantingMonth ? selectPlantingMonth.value : "June";
+        const farmingGoal = selectFarmingGoal ? selectFarmingGoal.value : "Maximize Net Profit";
+        const farmerName = inputFarmerName ? inputFarmerName.value.trim() : "Farmer";
+
+        try {
+            const resp = await fetch("/api/sync-live-location", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    latitude: lat,
+                    longitude: lon,
+                    acres: acres,
+                    session_id: sessionId,
+                    irrigation: irrigation,
+                    planting_month: plantingMonth,
+                    farming_goal: farmingGoal,
+                    farmer_name: farmerName
+                })
+            });
+
+            if (!resp.ok) {
+                throw new Error(`Live sync failed with status ${resp.status}`);
+            }
+
+            const data = await resp.json();
+            const loc = data.detected_location || {};
+            const env = data.recommendations ? data.recommendations.environmental : null;
+
+            // Automatically select/add detected district in dropdown
+            if (loc.district && selectDistrict) {
+                appState.districtName = loc.district;
+                let foundDistrict = false;
+                for (let i = 0; i < selectDistrict.options.length; i++) {
+                    if (selectDistrict.options[i].value.toLowerCase() === loc.district.toLowerCase()) {
+                        selectDistrict.selectedIndex = i;
+                        foundDistrict = true;
+                        break;
+                    }
+                }
+                if (!foundDistrict && loc.district) {
+                    const opt = document.createElement("option");
+                    opt.value = loc.district;
+                    opt.textContent = `📍 ${loc.district} (Live Detected)`;
+                    opt.selected = true;
+                    selectDistrict.appendChild(opt);
+                }
+            }
+
+            if (loc.state && selectState) {
+                selectState.value = loc.state;
+            }
+
+            // Render live environmental results
+            if (env) {
+                renderEnvironmentalResults(env);
+            }
+
+            // Render live crop recommendations
+            if (data.recommendations) {
+                renderCropRecommendations(data.recommendations);
+            }
+
+            // Update header badges
+            if (headerLocationBadge) {
+                const area = loc.village ? `${loc.village}, ${loc.district}` : loc.district || "Live GPS";
+                headerLocationBadge.textContent = `📍 Live: ${area}`;
+            }
+            if (headerDatabaseBadge) {
+                headerDatabaseBadge.textContent = "💾 Live Synced";
+            }
+            if (syncStatusBadge) {
+                syncStatusBadge.textContent = "⚡ Live GPS & Climate Synced";
+                syncStatusBadge.className = "badge success";
+            }
+
+            // Display success alert
+            const villageStr = loc.village ? `in ${loc.village}, ` : "";
+            showAlert(`✅ Live Location Synced: ${villageStr}${loc.district} (${lat.toFixed(4)}°N, ${lon.toFixed(4)}°E) | Soil: ${data.soil_type} | Temp: ${data.temperature} | Chatbot Memory Synced!`, "success");
+
+            // Dispatch custom event to notify voice assistant memory badges
+            window.dispatchEvent(new CustomEvent("krishimitra:memory_updated", { detail: data.memory }));
+
+        } catch (err) {
+            console.error("Live sync error:", err);
+            showAlert(`Live location sync warning: ${err.message}. Coordinates set to ${lat.toFixed(4)}°N, ${lon.toFixed(4)}°E.`, "warning");
+        } finally {
+            if (btnDetectLocation) {
+                btnDetectLocation.disabled = false;
+                btnDetectLocation.textContent = "🛰️ Detect & Sync Live Location";
+            }
+        }
+    }
+
     // --- Detect Live GPS Location via Browser ---
     if (btnDetectLocation) {
         btnDetectLocation.addEventListener("click", () => {
@@ -203,26 +314,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
             showAlert("📡 Querying device GPS sensors for live location...", "info");
             btnDetectLocation.disabled = true;
+            btnDetectLocation.textContent = "🛰️ Reading GPS...";
 
             navigator.geolocation.getCurrentPosition(
                 (pos) => {
-                    btnDetectLocation.disabled = false;
-                    const lat = pos.coords.latitude;
-                    const lon = pos.coords.longitude;
-                    inputLat.value = lat.toFixed(4);
-                    inputLon.value = lon.toFixed(4);
-                    appState.latitude = lat;
-                    appState.longitude = lon;
-                    showAlert(`✅ Live GPS Coordinates acquired: ${lat.toFixed(4)}°N, ${lon.toFixed(4)}°E`, "success");
-                    if (headerLocationBadge) {
-                        headerLocationBadge.textContent = `📍 GPS: ${lat.toFixed(4)}, ${lon.toFixed(4)}`;
-                    }
+                    syncLiveLocation(pos.coords.latitude, pos.coords.longitude, false);
                 },
                 (err) => {
                     btnDetectLocation.disabled = false;
-                    showAlert(`GPS Detection Warning: ${err.message}. Retaining editable coordinates.`, "warning");
+                    btnDetectLocation.textContent = "🛰️ Detect & Sync Live Location";
+                    showAlert(`GPS Detection Warning: ${err.message}. Please select your district or verify GPS permissions.`, "warning");
                 },
-                { enableHighAccuracy: true, timeout: 8000 }
+                { enableHighAccuracy: true, timeout: 9000 }
             );
         });
     }
@@ -536,6 +639,23 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Initial load on page ready
-    loadPersistedProfile(false);
+    // Auto-detect live GPS location on initial launch
+    function autoDetectOnStartup() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    syncLiveLocation(pos.coords.latitude, pos.coords.longitude, true);
+                },
+                (err) => {
+                    console.log("Auto-GPS deferred:", err.message);
+                    loadPersistedProfile(false);
+                },
+                { enableHighAccuracy: true, timeout: 5000 }
+            );
+        } else {
+            loadPersistedProfile(false);
+        }
+    }
+
+    autoDetectOnStartup();
 });

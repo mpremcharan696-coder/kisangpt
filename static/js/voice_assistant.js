@@ -336,26 +336,64 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // --- Update Conversational Memory Badges ---
     function updateMemoryBadges(memory) {
-        if (!memoryBadgesContainer || !memory) return;
+        if (!memoryBadgesContainer) return;
         memoryBadgesContainer.innerHTML = "";
 
-        const keys = Object.keys(memory);
-        if (keys.length === 0) {
-            memoryBadgesContainer.innerHTML = `<span style="font-size: 12px; color: var(--text-muted);">No active memory entities yet. Talk to the bot!</span>`;
+        if (!memory || Object.keys(memory).length === 0) {
+            memoryBadgesContainer.innerHTML = `
+                <span class="badge warning" style="font-size: 11.5px; padding: 4px 10px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;" onclick="window.switchDashboardTab('section-location'); document.getElementById('btnDetectLocation').click();">
+                    🛰️ Live Location: Tap here to detect GPS & sync real soil & temperature
+                </span>
+            `;
             return;
         }
 
+        const iconMap = {
+            district: "📍",
+            soil_type: "🌱",
+            temperature: "🌡️",
+            recommended_crops: "🌾",
+            acres: "📐",
+            irrigation: "💧",
+            crop: "🌿",
+            preferred_language: "🗣️"
+        };
+
+        const keys = Object.keys(memory);
+        let renderedCount = 0;
+
         keys.forEach(k => {
             const val = memory[k];
-            if (val !== null && val !== undefined) {
+            if (val !== null && val !== undefined && String(val).trim() !== "") {
+                const icon = iconMap[k] || "📌";
                 const badge = document.createElement("span");
                 badge.className = "badge info";
                 badge.style.fontSize = "11px";
                 badge.style.padding = "3px 8px";
-                badge.textContent = `📌 ${k}: ${val}`;
+
+                let displayVal = val;
+                if (Array.isArray(val)) {
+                    displayVal = val.join(", ");
+                } else if (typeof val === "string" && val.startsWith("[") && val.endsWith("]")) {
+                    try {
+                        const parsedArr = JSON.parse(val);
+                        if (Array.isArray(parsedArr)) displayVal = parsedArr.join(", ");
+                    } catch (_) {}
+                }
+
+                badge.textContent = `${icon} ${k}: ${displayVal}`;
                 memoryBadgesContainer.appendChild(badge);
+                renderedCount++;
             }
         });
+
+        if (renderedCount === 0) {
+            memoryBadgesContainer.innerHTML = `
+                <span class="badge warning" style="font-size: 11.5px; padding: 4px 10px; cursor: pointer;" onclick="window.switchDashboardTab('section-location'); document.getElementById('btnDetectLocation').click();">
+                    🛰️ Live Location: Tap to sync live GPS, soil & climate
+                </span>
+            `;
+        }
     }
 
     // --- Send Chat Message ---
@@ -514,10 +552,20 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    // Listen for real-time live location memory updates dispatched from dashboard
+    window.addEventListener("krishimitra:memory_updated", (e) => {
+        if (e.detail) {
+            updateMemoryBadges(e.detail);
+        } else {
+            refreshAssistantMemory();
+        }
+    });
+
     // Initial memory refresh
     refreshAssistantMemory();
 
     // Start Onboarding Greeting on launch
     triggerOnboardingGreeting();
 });
+
 

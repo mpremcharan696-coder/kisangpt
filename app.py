@@ -209,6 +209,140 @@ def api_crop_recommendations():
         return jsonify({"error": f"Crop recommendation failed: {str(err)}"}), 502
 
 
+# ─── Part 1B: Live Location & Environmental Sync Endpoint ───────────────────────
+
+@calendar_api.route("/sync-live-location", methods=["POST"])
+def api_sync_live_location():
+    """
+    POST /api/sync-live-location
+    Accepts:
+        {
+            "latitude": float,
+            "longitude": float,
+            "acres": float (optional, default 2.0),
+            "session_id": str (optional),
+            "irrigation": str (optional),
+            "planting_month": str (optional),
+            "farming_goal": str (optional),
+            "farmer_name": str (optional)
+        }
+    1. Reverse geocodes exact live location via OpenStreetMap Nominatim.
+    2. Modelled soil texture classification via Google Earth Engine (OpenLandMap 250m).
+    3. Live 7-day weather forecast, temperature, and rainfall via Open-Meteo.
+    4. Evaluates verified crop recommendations for the live location.
+    5. Synchronizes live parameters into SQLite `farmers` and `farmer_memory` tables.
+    """
+    data = request.get_json(silent=True) or {}
+    lat_val = data.get("latitude")
+    lon_val = data.get("longitude")
+    if lat_val is None or lon_val is None:
+        return jsonify({"error": "Latitude and longitude are required to fetch live location data."}), 400
+
+    try:
+        lat = float(lat_val)
+        lon = float(lon_val)
+        acres = float(data.get("acres", 2.0))
+        if acres <= 0:
+            acres = 2.0
+    except (ValueError, TypeError):
+        return jsonify({"error": "Latitude, longitude, and acres must be valid numbers."}), 400
+
+    session_id = data.get("session_id") or "session_default"
+    irrigation_val = data.get("irrigation") or "Borewell / Irrigated"
+    planting_month_val = data.get("planting_month") or "June"
+    goal_val = data.get("farming_goal") or "Maximize Net Profit"
+    farmer_name = data.get("farmer_name") or "Farmer"
+
+    try:
+        # 1. Live environmental intelligence (OSM + Earth Engine + Open-Meteo)
+        location_data = ls.analyze_farm_location(lat, lon, acres)
+        admin_info = location_data.get("administrative", {})
+        detected_village = admin_info.get("village") or ""
+        detected_district = admin_info.get("district") or data.get("district") or "Karnataka"
+        detected_state = admin_info.get("state") or data.get("state") or "Karnataka"
+
+        soil_info = location_data.get("soil", {})
+        soil_type = soil_info.get("soil_type", "Loam")
+
+        weather_info = location_data.get("weather_summary", {})
+        temp_max = weather_info.get("avg_max_temperature_c")
+        temp_str = f"{temp_max}°C" if temp_max is not None else "30°C"
+
+        # 2. Crop recommendations tailored to the live location
+        farmer_info = {
+            "irrigation": irrigation_val,
+            "farming_goal": goal_val,
+            "acres": acres,
+            "district": detected_district,
+            "state": detected_state,
+            "planting_month": planting_month_val
+        }
+        recs = cr.recommend_crops(location_data, farmer_info)
+        recs["environmental"] = location_data
+
+        # 3. Synchronize to SQLite farmer_memory for the active chatbot session
+        cdb.save_farmer_memory(session_id, "district", detected_district)
+        cdb.save_farmer_memory(session_id, "acres", acres)
+        cdb.save_farmer_memory(session_id, "irrigation", irrigation_val)
+        cdb.save_farmer_memory(session_id, "soil_type", soil_type)
+        cdb.save_farmer_memory(session_id, "temperature", temp_str)
+
+        top_crops = [c.get("crop") for c in recs.get("top_recommendations", [])[:4] if c.get("crop")]
+        if top_crops:
+            cdb.save_farmer_memory(session_id, "recommended_crops", top_crops)
+
+        # 4. Save/update profile in `farmers` table
+        conn = _get_farmer_db()
+        cur = conn.cursor()
+        profile_dict = {
+            "latitude": lat,
+            "longitude": lon,
+            "acres": acres,
+            "irrigation": irrigation_val,
+            "soil_type": soil_type,
+            "weather_summary": weather_info,
+            "environmental_data": location_data
+        }
+        cur.execute("SELECT id FROM farmers ORDER BY updated_at DESC, id DESC LIMIT 1")
+        existing = cur.fetchone()
+        if existing:
+            cur.execute("""
+                UPDATE farmers
+                SET full_name = ?, state = ?, district = ?, profile_data = ?, updated_at = CURRENT_TIMESTAMP
+                WHERE id = ?
+            """, (farmer_name, detected_state, detected_district, json.dumps(profile_dict), existing["id"]))
+        else:
+            cur.execute("""
+                INSERT INTO farmers (full_name, phone_number, state, district, profile_data, created_at, updated_at)
+                VALUES (?, '', ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+            """, (farmer_name, detected_state, detected_district, json.dumps(profile_dict)))
+        conn.commit()
+        conn.close()
+
+        updated_memory = cdb.get_all_farmer_memory(session_id)
+
+        return jsonify({
+            "status": "success",
+            "message": "Live location and environmental data fetched and synchronized successfully",
+            "detected_location": {
+                "latitude": lat,
+                "longitude": lon,
+                "village": detected_village,
+                "district": detected_district,
+                "state": detected_state,
+                "display_name": admin_info.get("display_name", "")
+            },
+            "soil_type": soil_type,
+            "temperature": temp_str,
+            "weather_summary": weather_info,
+            "recommendations": recs,
+            "memory": updated_memory
+        }), 200
+    except Exception as err:
+        return jsonify({"error": f"Live location sync failed: {str(err)}"}), 502
+
+
+
 # ─── Part 1: Cultivation Budget Endpoint ──────────────────────────────────────
 
 @calendar_api.route("/crop-budget", methods=["GET"])

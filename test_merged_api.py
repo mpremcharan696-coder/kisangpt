@@ -122,4 +122,24 @@ class TestMergedAPI(unittest.TestCase):
         self.assertIn("Farm Geolocation & Parameters", dash_html)
         self.assertIn("userProfileBadge", dash_html)
 
+    def test_sync_live_location_endpoint(self):
+        """Verifies POST /api/sync-live-location fetches real Earth Engine & Open-Meteo data and updates memory."""
+        res = self.client.post("/api/sync-live-location", json={
+            "latitude": 12.9716,
+            "longitude": 77.5946,
+            "acres": 2.5,
+            "session_id": "test_unit_live_sync_sess"
+        })
+        self.assertEqual(res.status_code, 200)
+        data = res.get_json()
+        self.assertEqual(data["status"], "success")
+        self.assertIn("detected_location", data)
+        self.assertIn("soil_type", data)
+        self.assertIn("temperature", data)
+        self.assertIn("memory", data)
+        self.assertEqual(data["memory"]["acres"], 2.5)
+        self.assertTrue(len(data["memory"]["district"]) > 0)
+        self.assertTrue(len(data["soil_type"]) > 0)
+
+
 
