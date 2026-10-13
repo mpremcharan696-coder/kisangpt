@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KrishiMitra AI | Login - ಕೃಷಿಮಿತ್ರ ಸೈನ್ ಇನ್</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Kannada:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/auth.css">
+</head>
+<body>
+    <div class="auth-page-container">
+        <!-- Back to Home Link -->
+        <div class="auth-top-nav">
+            <a href="/" class="btn-back-home">
+                <span class="back-arrow">←</span>
+                <span>Back to Home / ಮುಖಪುಟಕ್ಕೆ ಹಿಂತಿರುಗಿ</span>
+            </a>
+        </div>
+
+        <div class="auth-card">
+            <!-- Header with Logo -->
+            <div class="auth-header">
+                <div class="auth-brand-icon">🌱</div>
+                <h1 class="auth-title">KrishiMitra AI</h1>
+                <div class="auth-kannada-title">ಕೃಷಿಮಿತ್ರ ಲಾಗಿನ್</div>
+                <p class="auth-subtitle">Sign in to access personalized farm soil analytics, verified crop advisory, and bilingual voice intelligence.</p>
+            </div>
+
+            <!-- Dynamic Alert Message Box -->
+            <div id="authAlert" class="auth-alert hidden" role="alert"></div>
+
+            <!-- 1. Google One-Click Sign In -->
+            <div class="google-auth-wrapper">
+                <button type="button" id="btnGoogleAuth" class="btn-google">
+                    <svg class="google-icon" width="18" height="18" viewBox="0 0 48 48">
+                        <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                        <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                        <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.55 10.78l7.98-6.19z"/>
+                        <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                    </svg>
+                    <span>Continue with Google / ಗೂಗಲ್ ಮೂಲಕ ಪ್ರವೇಶಿಸಿ</span>
+                </button>
+            </div>
+
+            <!-- Divider -->
+            <div class="auth-divider">
+                <span class="divider-text">OR CONTINUE WITH</span>
+            </div>
+
+            <!-- Auth Method Switcher Tabs -->
+            <div class="auth-tabs" role="tablist">
+                <button type="button" class="tab-btn active" id="tabEmailBtn" data-target="email-panel">
+                    📧 Email & Password
+                </button>
+                <button type="button" class="tab-btn" id="tabPhoneBtn" data-target="phone-panel">
+                    📱 Phone Number (OTP)
+                </button>
+            </div>
+
+            <!-- PANEL 1: Email / Password -->
+            <div class="auth-panel active" id="email-panel">
+                <div class="sub-toggle-container">
+                    <button type="button" class="sub-toggle-btn active" id="subToggleSignIn">Sign In</button>
+                    <button type="button" class="sub-toggle-btn" id="subToggleSignUp">Create Account</button>
+                </div>
+
+                <form id="emailAuthForm" class="auth-form" novalidate>
+                    <div class="form-group hidden" id="groupDisplayName">
+                        <label for="displayNameInput" class="form-label">Full Name / ರೈತರ ಹೆಸರು</label>
+                        <input type="text" id="displayNameInput" class="form-input" placeholder="e.g. Ramesh Gowda">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="emailInput" class="form-label">Email Address / ಇಮೇಲ್</label>
+                        <input type="email" id="emailInput" class="form-input" placeholder="farmer@example.com" required autocomplete="email">
+                    </div>
+
+                    <div class="form-group">
+                        <div class="label-row">
+                            <label for="passwordInput" class="form-label">Password / ಪಾಸ್ವರ್ಡ್</label>
+                            <a href="#" id="linkForgotPassword" class="form-sublink">Forgot?</a>
+                        </div>
+                        <input type="password" id="passwordInput" class="form-input" placeholder="••••••••" required autocomplete="current-password">
+                    </div>
+
+                    <button type="submit" id="btnEmailSubmit" class="btn-primary-auth">
+                        <span class="btn-spinner hidden" id="emailSpinner"></span>
+                        <span class="btn-label" id="emailSubmitLabel">Sign In / ಸೈನ್ ಇನ್</span>
+                    </button>
+                </form>
+            </div>
+
+            <!-- PANEL 2: Phone Number OTP -->
+            <div class="auth-panel hidden" id="phone-panel">
+                <!-- Step 1: Send OTP -->
+                <form id="phoneSendOtpForm" class="auth-form">
+                    <p class="panel-instructions">
+                        Enter your mobile number to receive a 6-digit verification code.
+                    </p>
+
+                    <div class="form-group">
+                        <label for="phoneNumberInput" class="form-label">Mobile Number / ಮೊಬೈಲ್ ಸಂಖ್ಯೆ</label>
+                        <div class="phone-input-group">
+                            <span class="country-prefix">+91</span>
+                            <input type="tel" id="phoneNumberInput" class="form-input phone-field" placeholder="9876543210" maxlength="10" required>
+                        </div>
+                        <span class="form-hint">Standard 10-digit Indian mobile number</span>
+                    </div>
+
+                    <!-- Invisible/Visible Firebase reCAPTCHA Container -->
+                    <div id="recaptcha-container" style="margin: 10px 0;"></div>
+
+                    <button type="submit" id="btnSendOtp" class="btn-primary-auth">
+                        <span class="btn-spinner hidden" id="phoneSpinner"></span>
+                        <span class="btn-label">Send OTP / ಒಟಿಪಿ ಕಳುಹಿಸಿ</span>
+                    </button>
+                </form>
+
+                <!-- Step 2: Verify OTP (Hidden until OTP sent) -->
+                <form id="phoneVerifyOtpForm" class="auth-form hidden">
+                    <div class="otp-status-badge">
+                        <span>OTP sent to: </span>
+                        <strong id="displayTargetPhone">+91 XXXXX XXXXX</strong>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="otpCodeInput" class="form-label">Enter 6-Digit OTP / ಒಟಿಪಿ ನಮೂದಿಸಿ</label>
+                        <input type="text" id="otpCodeInput" class="form-input otp-field" placeholder="••••••" maxlength="6" pattern="[0-9]{6}" required autocomplete="one-time-code">
+                    </div>
+
+                    <button type="submit" id="btnVerifyOtp" class="btn-primary-auth">
+                        <span class="btn-spinner hidden" id="verifySpinner"></span>
+                        <span class="btn-label">Verify & Login / ಪರಿಶೀಲಿಸಿ</span>
+                    </button>
+
+                    <div class="resend-row">
+                        <button type="button" id="btnChangeNumber" class="btn-link">Change Number</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Card Footer -->
+            <div class="auth-card-footer">
+                <span>By continuing, you agree to KrishiMitra's Agricultural Advisory terms.</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase Auth Modular Scripts -->
+    <script type="module" src="/static/js/auth.js"></script>
+</body>
+</html>

@@ -885,10 +885,20 @@ def create_app(config: Optional[Dict[str, Any]] = None) -> Flask:
     # Register the modular API blueprint
     app.register_blueprint(calendar_api)
 
-    # Web UI Dashboard Route
+    # Web UI Routes
     @app.route("/")
+    def home():
+        """Public Landing Homepage with 'Get Started' CTA."""
+        return render_template("home.html")
+
+    @app.route("/login")
+    def login():
+        """Firebase Authentication Page (Google, Email/Password, Phone OTP)."""
+        return render_template("login.html")
+
     @app.route("/dashboard")
-    def index():
+    def dashboard():
+        """Authenticated Farmer Dashboard with Geolocation and KrishiMitra Voice Chatbot."""
         view = request.args.get("view")
         if view == "calendar":
             grid = fc.get_calendar_grid()

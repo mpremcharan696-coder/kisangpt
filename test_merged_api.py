@@ -96,3 +96,30 @@ class TestMergedAPI(unittest.TestCase):
         self.assertEqual(get_data["profile"]["district"], "Belagavi")
         self.assertEqual(get_data["profile"]["latitude"], 15.8497)
 
+    def test_web_routes_render_html(self):
+        """Verifies GET /, /login, and /dashboard render expected templates."""
+        # 1. Homepage
+        res_home = self.client.get("/")
+        self.assertEqual(res_home.status_code, 200)
+        home_html = res_home.get_data(as_text=True)
+        self.assertIn("KrishiMitra", home_html)
+        self.assertIn("Get Started", home_html)
+        self.assertIn("/login", home_html)
+
+        # 2. Login Page
+        res_login = self.client.get("/login")
+        self.assertEqual(res_login.status_code, 200)
+        login_html = res_login.get_data(as_text=True)
+        self.assertIn("Continue with Google", login_html)
+        self.assertIn("btnGoogleAuth", login_html)
+        self.assertIn("phone-panel", login_html)
+        self.assertIn("recaptcha-container", login_html)
+
+        # 3. Dashboard
+        res_dash = self.client.get("/dashboard")
+        self.assertEqual(res_dash.status_code, 200)
+        dash_html = res_dash.get_data(as_text=True)
+        self.assertIn("Farm Geolocation & Parameters", dash_html)
+        self.assertIn("userProfileBadge", dash_html)
+
+
