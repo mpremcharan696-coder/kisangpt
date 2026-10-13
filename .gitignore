@@ -1,0 +1,33 @@
+# Environment Variables (Keep Private)
+.env
+*.env
+**/.env
+
+# Teammate staging directories
+repo_mkganesh/
+repo_seshank/
+
+# Python bytecode & cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Logs & Temporary Files
+*.log
+*.sqlite3-journal
+
+# Virtual Environments
+venv/
+env/
+.venv/
+ENV/
+
+# IDE & OS Files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
